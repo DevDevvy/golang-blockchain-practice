@@ -1,3 +1,3 @@
-module goblockchain.go
+module goblockchain
 
 go 1.21.4

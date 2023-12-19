@@ -1,9 +1,14 @@
 package main
 
 import (
-	"fmt"
+	"goblockchain/blockchain"
+	"log"
 )
 
+func init() {
+	log.SetPrefix("Blockchain:")
+}
 func main() {
-	fmt.Println("Hello World")
+	block := blockchain.NewBlock(0, "init hash")
+	block.Print()
 }
