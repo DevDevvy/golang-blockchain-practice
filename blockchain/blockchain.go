@@ -1,35 +1,10 @@
 package blockchain
 
 import (
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 )
-
-// Block is a block in the blockchain
-type Block struct {
-	nonce        int
-	previousHash [32]byte
-	transactions []string
-	timestamp    int64
-}
-
-// Blockchain is the blockchain
-type Blockchain struct {
-	transactionPool []string
-	chain           []*Block
-}
-
-// NewBlock Creates a new block
-func NewBlock(nonce int, previousHash [32]byte) *Block {
-	block := new(Block)
-	block.timestamp = time.Now().UnixNano()
-	block.nonce = nonce
-	block.previousHash = previousHash
-	return block
-}
 
 // NewBlockchain creates a new blockchain
 func NewBlockchain() *Blockchain {
@@ -37,35 +12,6 @@ func NewBlockchain() *Blockchain {
 	blockchain := new(Blockchain)
 	blockchain.CreateBlock(0, block.Hash())
 	return blockchain
-}
-
-// CreateBlock creates a new block on the chain
-func (blockchain *Blockchain) CreateBlock(nonce int, previousHash [32]byte) *Block {
-	block := NewBlock(nonce, previousHash)
-	blockchain.chain = append(blockchain.chain, block)
-	// block.transactions = blockchain.transactionPool
-	// blockchain.transactionPool = []string{}
-	return block
-}
-
-func (block *Block) Hash() [32]byte {
-	m, _ := json.Marshal(block)
-	fmt.Println(string(m))
-	return sha256.Sum256([]byte(m))
-}
-
-func (block *Block) MarshalJSON() ([]byte, error) {
-	return json.Marshal(struct {
-		Nonce        int      `json:"nonce"`
-		PreviousHash [32]byte `json:"previous_hash"`
-		Transactions []string `json:"transactions"`
-		Timestamp    int64    `json:"timestamp"`
-	}{
-		Nonce:        block.nonce,
-		PreviousHash: block.previousHash,
-		Transactions: block.transactions,
-		Timestamp:    block.timestamp,
-	})
 }
 
 // Print prints the blockchain
@@ -77,14 +23,30 @@ func (blockchain *Blockchain) Print() {
 	fmt.Printf("%s\n", strings.Repeat("*", 25))
 }
 
-func (blockchain *Blockchain) LastBlock() *Block {
-	return blockchain.chain[len(blockchain.chain)-1]
+func NewTransaction(sender string, recipient string, value float32) *Transaction {
+	return &Transaction{sender, recipient, value}
 }
 
-// Print prints the block"
-func (block *Block) Print() {
-	fmt.Printf("nonce: %d\n", block.nonce)
-	fmt.Printf("previousHash: %x\n", block.previousHash)
-	fmt.Printf("timestamp: %d\n", block.timestamp)
-	fmt.Printf("transactions: %s\n", block.transactions)
+func (transaction *Transaction) Print() {
+	fmt.Printf("%s\n", strings.Repeat("_", 30))
+	fmt.Printf("senderBlockchainAddress: %s\n", transaction.senderBlockchainAddress)
+	fmt.Printf("recipientBlockchainAddress: %s\n", transaction.recipientBlockchainAddress)
+	fmt.Printf("value: %.1f\n", transaction.value)
+}
+
+func (blockchain *Blockchain) AddTransaction(sender string, recipient string, value float32) {
+	transaction := NewTransaction(sender, recipient, value)
+	blockchain.transactionPool = append(blockchain.transactionPool, transaction)
+}
+
+func (transaction *Transaction) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		SenderBlockchainAddress    string  `json:"sender_blockchain_address"`
+		RecipientBlockchainAddress string  `json:"recipient_blockchain_address"`
+		Value                      float32 `json:"value"`
+	}{
+		SenderBlockchainAddress:    transaction.senderBlockchainAddress,
+		RecipientBlockchainAddress: transaction.recipientBlockchainAddress,
+		Value:                      transaction.value,
+	})
 }
