@@ -9,6 +9,15 @@ func init() {
 	log.SetPrefix("Blockchain:")
 }
 func main() {
-	block := blockchain.NewBlock(0, "init hash")
-	block.Print()
+	blockchain := blockchain.NewBlockchain()
+	blockchain.Print()
+
+	previousHash := blockchain.LastBlock().Hash()
+	blockchain.CreateBlock(5, previousHash)
+	blockchain.Print()
+
+	previousHash = blockchain.LastBlock().Hash()
+	blockchain.CreateBlock(2, previousHash)
+	blockchain.Print()
+
 }
