@@ -6,10 +6,17 @@ import (
 	"strings"
 )
 
+const (
+	MINING_DIFFICULTY = 3
+	MINING_SENDER     = "THE BLOCKCHAIN"
+	MINING_REWARD     = 1.0
+)
+
 // NewBlockchain creates a new blockchain
-func NewBlockchain() *Blockchain {
+func NewBlockchain(blockchainAddress string) *Blockchain {
 	block := &Block{}
 	blockchain := new(Blockchain)
+	blockchain.blockchainAddress = blockchainAddress
 	blockchain.CreateBlock(0, block.Hash())
 	return blockchain
 }
@@ -39,6 +46,43 @@ func (blockchain *Blockchain) AddTransaction(sender string, recipient string, va
 	blockchain.transactionPool = append(blockchain.transactionPool, transaction)
 }
 
+// CopyTransactionPool copies the transaction pool before it's cleared
+func (blockchain *Blockchain) CopyTransactionPool() []*Transaction {
+	//creates a slice of pointers for the new transactions
+	transactions := make([]*Transaction, 0)
+	for _, transaction := range blockchain.transactionPool {
+		transactions = append(transactions,
+			NewTransaction(transaction.senderBlockchainAddress,
+				transaction.recipientBlockchainAddress,
+				transaction.value,
+			),
+		)
+	}
+	return transactions
+}
+
+// ValidProof calculates the difficulty
+func (blockchain *Blockchain) ValidProof(nonce int, previousHash [32]byte, transactions []*Transaction, difficulty int) bool {
+	zeroes := strings.Repeat("0", difficulty)
+	guessBlock := Block{0, nonce, previousHash, transactions}
+	guessHash := guessBlock.Hash()
+	guessString := fmt.Sprintf("%x", guessHash)
+	fmt.Println(guessString)
+	return guessString[:difficulty] == zeroes
+}
+
+// ProofOfWork cycles through solutions to find the nonce
+func (blockchain *Blockchain) ProofOfWork() int {
+	transactions := blockchain.CopyTransactionPool()
+	previousHash := blockchain.LastBlock().Hash()
+	nonce := 0
+	for !blockchain.ValidProof(nonce, previousHash, transactions, MINING_DIFFICULTY) {
+		nonce++
+	}
+	return nonce
+}
+
+// MarshalJSON makes readable output
 func (transaction *Transaction) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		SenderBlockchainAddress    string  `json:"sender_blockchain_address"`

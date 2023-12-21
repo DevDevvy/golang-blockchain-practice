@@ -28,7 +28,6 @@ func (blockchain *Blockchain) CreateBlock(nonce int, previousHash [32]byte) *Blo
 // Hash returns the hash of the block
 func (block *Block) Hash() [32]byte {
 	m, _ := json.Marshal(block)
-	fmt.Println(string(m))
 	return sha256.Sum256([]byte(m))
 }
 

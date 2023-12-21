@@ -2,16 +2,17 @@ package blockchain
 
 // Block is a block in the blockchain
 type Block struct {
+	timestamp    int64
 	nonce        int
 	previousHash [32]byte
 	transactions []*Transaction
-	timestamp    int64
 }
 
 // Blockchain is the blockchain
 type Blockchain struct {
-	transactionPool []*Transaction
-	chain           []*Block
+	transactionPool   []*Transaction
+	chain             []*Block
+	blockchainAddress string
 }
 
 type Transaction struct {
