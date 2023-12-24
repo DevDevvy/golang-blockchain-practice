@@ -1,11 +1,16 @@
 package blockchain
 
 import (
+	"crypto/ecdsa"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"goblockchain/utils"
+	"log"
 	"strings"
 )
 
+// consts for mining
 const (
 	MINING_DIFFICULTY = 3
 	MINING_SENDER     = "THE BLOCKCHAIN"
@@ -30,10 +35,12 @@ func (blockchain *Blockchain) Print() {
 	fmt.Printf("%s\n", strings.Repeat("*", 25))
 }
 
+// NewTransaction creates a new transaction
 func NewTransaction(sender string, recipient string, value float32) *Transaction {
 	return &Transaction{sender, recipient, value}
 }
 
+// Print prints the transaction in json
 func (transaction *Transaction) Print() {
 	fmt.Printf("%s\n", strings.Repeat("_", 30))
 	fmt.Printf("senderBlockchainAddress: %s\n", transaction.senderBlockchainAddress)
@@ -41,9 +48,35 @@ func (transaction *Transaction) Print() {
 	fmt.Printf("value: %.1f\n", transaction.value)
 }
 
-func (blockchain *Blockchain) AddTransaction(sender string, recipient string, value float32) {
+// AddTransaction adds a transaction to the transaction pool
+func (blockchain *Blockchain) AddTransaction(
+	sender string, recipient string, value float32,
+	senderPublicKey *ecdsa.PublicKey, signature *utils.Signature) bool {
 	transaction := NewTransaction(sender, recipient, value)
-	blockchain.transactionPool = append(blockchain.transactionPool, transaction)
+	if sender == MINING_SENDER {
+		blockchain.transactionPool = append(blockchain.transactionPool, transaction)
+		return true
+	}
+	if blockchain.VerifyTransactionSignature(senderPublicKey, signature, transaction) {
+		//TODO uncomment to go live after testing
+		// if blockchain.CalculateTotalAmount(sender) < value {
+		// 	log.Println("ERROR: Not enough balance")
+		// 	return false
+		// }
+		blockchain.transactionPool = append(blockchain.transactionPool, transaction)
+		return true
+	} else {
+		log.Println("ERROR: Invalid transaction signature")
+	}
+	return false
+}
+
+// VerifyTransactionSignature verifies the signature of the transaction
+func (blockchain *Blockchain) VerifyTransactionSignature(
+	senderPublicKey *ecdsa.PublicKey, signature *utils.Signature, transaction *Transaction) bool {
+	m, _ := json.Marshal(transaction)
+	hash := sha256.Sum256([]byte(m))
+	return ecdsa.Verify(senderPublicKey, hash[:], signature.R, signature.S)
 }
 
 // CopyTransactionPool copies the transaction pool before it's cleared
@@ -80,6 +113,22 @@ func (blockchain *Blockchain) ProofOfWork() int {
 		nonce++
 	}
 	return nonce
+}
+
+// CalculateTotalAmount calculates the total by running through the blockchain
+func (blockchain *Blockchain) CalculateTotalAmount(blockchainAddress string) float32 {
+	var totalAmount float32 = 0.0
+	for _, block := range blockchain.chain {
+		for _, transaction := range block.transactions {
+			if transaction.recipientBlockchainAddress == blockchainAddress {
+				totalAmount += transaction.value
+			}
+			if transaction.senderBlockchainAddress == blockchainAddress {
+				totalAmount -= transaction.value
+			}
+		}
+	}
+	return totalAmount
 }
 
 // MarshalJSON makes readable output
