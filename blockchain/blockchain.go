@@ -18,12 +18,21 @@ const (
 )
 
 // NewBlockchain creates a new blockchain
-func NewBlockchain(blockchainAddress string) *Blockchain {
+func NewBlockchain(blockchainAddress string, port uint16) *Blockchain {
 	block := &Block{}
 	blockchain := new(Blockchain)
 	blockchain.blockchainAddress = blockchainAddress
+	blockchain.port = port
 	blockchain.CreateBlock(0, block.Hash())
 	return blockchain
+}
+
+func (blockchain *Blockchain) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		Blocks []*Block `json:"chains"`
+	}{
+		Blocks: blockchain.chain,
+	})
 }
 
 // Print prints the blockchain
