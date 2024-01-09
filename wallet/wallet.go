@@ -77,6 +77,19 @@ func (wallet *Wallet) BlockchainAddress() string {
 	return wallet.blockchainAddress
 }
 
+// MarshalJSON makes readable output as the blockchain address
+func (wallet *Wallet) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		PrivateKey        string `json:"private_key"`
+		PublicKey         string `json:"public_key"`
+		BlockchainAddress string `json:"blockchain_address"`
+	}{
+		PrivateKey:        wallet.PrivateKeyStr(),
+		PublicKey:         wallet.PublicKeyStr(),
+		BlockchainAddress: wallet.blockchainAddress,
+	})
+}
+
 // PrivateKey returns the private key
 func (wallet *Wallet) PrivateKey() *ecdsa.PrivateKey {
 	return wallet.privateKey

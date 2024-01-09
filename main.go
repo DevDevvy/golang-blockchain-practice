@@ -16,7 +16,7 @@ func main() {
 	walletB := wallet.NewWallet()
 
 	transaction := wallet.NewTransaction(walletA.PrivateKey(), walletA.PublicKey(), walletA.BlockchainAddress(), walletB.BlockchainAddress(), 1.0)
-	blockchain := blockchain.NewBlockchain(walletM.BlockchainAddress())
+	blockchain := blockchain.NewBlockchain(walletM.BlockchainAddress(), 8080)
 	isAdded := blockchain.AddTransaction(
 		walletA.BlockchainAddress(), walletB.BlockchainAddress(),
 		1.0, walletA.PublicKey(), transaction.GenerateSignature(),
